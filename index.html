@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-to-Speech Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        textarea {
+            width: 80%;
+            height: 100px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            padding: 10px;
+        }
+        button {
+            font-size: 16px;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        select {
+            font-size: 16px;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Text-to-Speech Tool</h1>
+    <textarea id="text-input" placeholder="Enter your text here..."></textarea>
+    <br>
+    <label for="voice-select">Choose Voice:</label>
+    <select id="voice-select"></select>
+    <br><br>
+    <button id="play-btn">Play</button>
+    <button id="pause-btn" disabled>Pause</button>
+    <button id="resume-btn" disabled>Resume</button>
+    <button id="stop-btn" disabled>Stop</button>
+    <div>made by 💖 ayush patel</div>
+
+    <script>
+        const textInput = document.getElementById('text-input');
+        const voiceSelect = document.getElementById('voice-select');
+        const playBtn = document.getElementById('play-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resumeBtn = document.getElementById('resume-btn');
+        const stopBtn = document.getElementById('stop-btn');
+
+        let synth = window.speechSynthesis;
+        let voices = [];
+        let utterance = null;
+        let isPaused = false;
+
+        // Load available voices
+        function loadVoices() {
+            voices = synth.getVoices();
+            voiceSelect.innerHTML = voices.map((voice, index) => 
+                `<option value="${index}">${voice.name} (${voice.lang})</option>`
+            ).join('');
+        }
+
+        // Play text-to-speech
+        function playText() {
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            const text = textInput.value.trim();
+            if (!text) {
+                alert('Please enter some text!');
+                return;
+            }
+
+            utterance = new SpeechSynthesisUtterance(text);
+            const selectedVoiceIndex = voiceSelect.value;
+            utterance.voice = voices[selectedVoiceIndex];
+
+            synth.speak(utterance);
+
+            // Enable control buttons
+            pauseBtn.disabled = false;
+            stopBtn.disabled = false;
+            resumeBtn.disabled = true;
+
+            utterance.onend = () => {
+                pauseBtn.disabled = true;
+                stopBtn.disabled = true;
+                resumeBtn.disabled = true;
+            };
+        }
+
+        // Pause speech
+        function pauseText() {
+            if (synth.speaking && !synth.paused) {
+                synth.pause();
+                isPaused = true;
+                resumeBtn.disabled = false;
+                pauseBtn.disabled = true;
+            }
+        }
+
+        // Resume speech
+        function resumeText() {
+            if (synth.paused && isPaused) {
+                synth.resume();
+                isPaused = false;
+                resumeBtn.disabled = true;
+                pauseBtn.disabled = false;
+            }
+        }
+
+        // Stop speech
+        function stopText() {
+            synth.cancel();
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stopBtn.disabled = true;
+        }
+
+        // Event Listeners
+        playBtn.addEventListener('click', playText);
+        pauseBtn.addEventListener('click', pauseText);
+        resumeBtn.addEventListener('click', resumeText);
+        stopBtn.addEventListener('click', stopText);
+
+        // Load voices when available
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+        loadVoices();
+    </script>
+
+</body>
+</html>
